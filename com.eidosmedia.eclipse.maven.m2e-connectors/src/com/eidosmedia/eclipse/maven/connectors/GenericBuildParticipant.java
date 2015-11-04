@@ -1,4 +1,4 @@
-package com.eidosmedia.eclipse.maven.yuicompressor;
+package com.eidosmedia.eclipse.maven.connectors;
 
 import java.io.File;
 import java.util.Set;
@@ -13,7 +13,6 @@ import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.embedder.ArtifactKey;
 import org.eclipse.m2e.core.embedder.IMaven;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
-import org.eclipse.m2e.core.project.IMavenProjectRegistry;
 import org.eclipse.m2e.core.project.configurator.MojoExecutionBuildParticipant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,12 +21,18 @@ import org.sonatype.plexus.build.incremental.BuildContext;
 /**
  * 
  */
-public class BuildParticipant extends MojoExecutionBuildParticipant {
+public class GenericBuildParticipant extends MojoExecutionBuildParticipant {
 
-	private static final Logger log = LoggerFactory.getLogger(BuildParticipant.class);
+	private static final Logger log = LoggerFactory.getLogger(GenericBuildParticipant.class);
 
-	public BuildParticipant(MojoExecution execution) {
+	private final String inputPathParam;
+
+	private final String outputPathParam;
+
+	public GenericBuildParticipant(MojoExecution execution, String inputPathParam, String outputPathParam) {
 		super(execution, true, true);
+		this.inputPathParam = inputPathParam;
+		this.outputPathParam = outputPathParam;
 	}
 
 	@Override
@@ -48,27 +53,28 @@ public class BuildParticipant extends MojoExecutionBuildParticipant {
 		final IMaven maven = MavenPlugin.getMaven();
 		final IMavenProjectFacade currentProject = getMavenProjectFacade();
 		final BuildContext buildContext = getBuildContext();
-		final IMavenProjectRegistry projectRegistry = MavenPlugin.getMavenProjectRegistry();
 
 		ArtifactKey artifactKey = currentProject.getArtifactKey();
-		String shortArtifactKey = artifactKey.getGroupId() + ":" + artifactKey.getArtifactId() + ":" + artifactKey.getVersion();
+		String shortArtifactKey = artifactKey.getGroupId() 
+				+ ":" + artifactKey.getArtifactId() 
+				+ ":" + artifactKey.getVersion();
 		log.debug("artifact key: {}", shortArtifactKey);
 
 		MavenProject mavenProject = currentProject.getMavenProject();
-		File basedir = mavenProject.getBasedir();
-		File resourcesDirectory = new File(basedir, "src");
+		File inputPath = maven.getMojoParameterValue(mavenProject, mojoExecution, inputPathParam, File.class, monitor);
+
 		String outputDirectoryPath = mavenProject.getBuild().getDirectory();
 		File outputDirectory = new File(outputDirectoryPath);
 
 		if (INCREMENTAL_BUILD == kind || AUTO_BUILD == kind) {
-			log.debug("scan resources {}", resourcesDirectory);
-			Scanner ds = buildContext.newScanner(resourcesDirectory);
+			log.debug("scan resources {}", inputPath);
+			Scanner ds = buildContext.newScanner(inputPath);
 			ds.scan();
 			String[] files = ds.getIncludedFiles();
 			if (files == null || files.length <= 0) {
 				log.debug("build check: no resource changes");
-				log.debug("scan deleted resources {}", resourcesDirectory);
-				ds = buildContext.newDeleteScanner(resourcesDirectory);
+				log.debug("scan deleted resources {}", inputPath);
+				ds = buildContext.newDeleteScanner(inputPath);
 				ds.scan();
 				files = ds.getIncludedFiles();
 				if (files == null || files.length <= 0) {
@@ -87,14 +93,6 @@ public class BuildParticipant extends MojoExecutionBuildParticipant {
 
 		IProject project = currentProject.getProject();
 		project.refreshLocal(IResource.DEPTH_INFINITE, monitor);
-//		IFolder folder = project.getFolder("target");
-//		folder.accept(new IResourceVisitor() {
-//			@Override
-//			public boolean visit(IResource resource) throws CoreException {
-//				resource.touch(monitor);
-//				return true;
-//			}
-//		});
 
 		if (outputDirectory != null && outputDirectory.exists()) {
 			log.debug("refresh output directory: {}", outputDirectory);

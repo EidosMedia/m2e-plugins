@@ -1,4 +1,4 @@
-package com.eidosmedia.eclipse.maven.yuicompressor;
+package com.eidosmedia.eclipse.maven.libsass;
 
 import java.io.File;
 import java.util.Set;
@@ -26,12 +26,19 @@ public class BuildParticipant extends MojoExecutionBuildParticipant {
 
 	private static final Logger log = LoggerFactory.getLogger(BuildParticipant.class);
 
-	public BuildParticipant(MojoExecution execution) {
+	private final String inputPathParam;
+
+	private final String outputPathParam;
+	
+	public BuildParticipant(MojoExecution execution, String inputPathParam,  String outputPathParam) {
 		super(execution, true, true);
+		this.inputPathParam = inputPathParam;
+		this.outputPathParam = outputPathParam;
 	}
 
 	@Override
-	public Set<IProject> build(int kind, final IProgressMonitor monitor) throws Exception {
+	public Set<IProject> build(int kind, final IProgressMonitor monitor)
+			throws Exception {
 
 		final MojoExecution mojoExecution = getMojoExecution();
 
@@ -51,24 +58,27 @@ public class BuildParticipant extends MojoExecutionBuildParticipant {
 		final IMavenProjectRegistry projectRegistry = MavenPlugin.getMavenProjectRegistry();
 
 		ArtifactKey artifactKey = currentProject.getArtifactKey();
-		String shortArtifactKey = artifactKey.getGroupId() + ":" + artifactKey.getArtifactId() + ":" + artifactKey.getVersion();
+		String shortArtifactKey = artifactKey.getGroupId() + ":"
+				+ artifactKey.getArtifactId() + ":" + artifactKey.getVersion();
 		log.debug("artifact key: {}", shortArtifactKey);
 
 		MavenProject mavenProject = currentProject.getMavenProject();
-		File basedir = mavenProject.getBasedir();
-		File resourcesDirectory = new File(basedir, "src");
+		// File basedir = mavenProject.getBasedir();
+		// File inputPath = new File(basedir, "src");
+		File inputPath = maven.getMojoParameterValue(mavenProject, mojoExecution, inputPathParam, File.class, monitor);
+		
 		String outputDirectoryPath = mavenProject.getBuild().getDirectory();
 		File outputDirectory = new File(outputDirectoryPath);
 
 		if (INCREMENTAL_BUILD == kind || AUTO_BUILD == kind) {
-			log.debug("scan resources {}", resourcesDirectory);
-			Scanner ds = buildContext.newScanner(resourcesDirectory);
+			log.debug("scan resources {}", inputPath);
+			Scanner ds = buildContext.newScanner(inputPath);
 			ds.scan();
 			String[] files = ds.getIncludedFiles();
 			if (files == null || files.length <= 0) {
 				log.debug("build check: no resource changes");
-				log.debug("scan deleted resources {}", resourcesDirectory);
-				ds = buildContext.newDeleteScanner(resourcesDirectory);
+				log.debug("scan deleted resources {}", inputPath);
+				ds = buildContext.newDeleteScanner(inputPath);
 				ds.scan();
 				files = ds.getIncludedFiles();
 				if (files == null || files.length <= 0) {
@@ -87,14 +97,6 @@ public class BuildParticipant extends MojoExecutionBuildParticipant {
 
 		IProject project = currentProject.getProject();
 		project.refreshLocal(IResource.DEPTH_INFINITE, monitor);
-//		IFolder folder = project.getFolder("target");
-//		folder.accept(new IResourceVisitor() {
-//			@Override
-//			public boolean visit(IResource resource) throws CoreException {
-//				resource.touch(monitor);
-//				return true;
-//			}
-//		});
 
 		if (outputDirectory != null && outputDirectory.exists()) {
 			log.debug("refresh output directory: {}", outputDirectory);
