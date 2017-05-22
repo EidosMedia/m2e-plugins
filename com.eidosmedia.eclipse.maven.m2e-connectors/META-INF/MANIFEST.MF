@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: m2e-connectors
 Bundle-SymbolicName: com.eidosmedia.eclipse.maven.m2e-connectors;singleton:=true
-Bundle-Version: 1.0.0.0-SNAPSHOT
+Bundle-Version: 1.1.0.qualifier
 Bundle-Activator: com.eidosmedia.eclipse.maven.connectors.Activator
 Bundle-Vendor: EidosMedia S.p.A.
 Require-Bundle: org.slf4j.api;bundle-version="1.7.2",

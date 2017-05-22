@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <description name="EidosMedia M2E Extensions">
+      Includes EidosMedia M2E Extensions
+   </description>
+   <feature url="features/com.eidosmedia.eclipse.maven.m2e.extensions_1.1.0.qualifier.jar" id="com.eidosmedia.eclipse.maven.m2e.extensions" version="1.1.0.qualifier">
+      <category name="com.eidosmedia.eclipse.maven.m2e.extensions"/>
+   </feature>
+   <category-def name="com.eidosmedia.eclipse.maven.m2e.extensions" label="EidosMedia M2E Extensions"/>
+</site>
