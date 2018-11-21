@@ -6,7 +6,7 @@ cache:
 
 install: true
 
-script: mvn package -B
+script: mvn package -B -f com.eidosmedia.eclipse.maven.master/
   
 deploy:
   provider: script
