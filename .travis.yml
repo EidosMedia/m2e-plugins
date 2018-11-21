@@ -1,0 +1,16 @@
+language: java
+
+cache:
+  directories:
+  - $HOME/.m2
+
+install: true
+
+script: mvn package -B
+  
+deploy:
+  provider: script
+  skip-cleanup: true
+  script: git clone https://$GITHUB_TOKEN@github.com/EidosMedia/eidosmedia.github.io.git && rm -rf eidosmedia.github.io/m2e-plugins && unzip -d eidosmedia.github.io/m2e-plugins com.eidosmedia.eclipse.maven.site/target/site-*.zip && cd eidosmedia.github.io && git add --all && git commit -a -m "Update M2E Plugins update site" && git push origin master
+  on:
+    branch: master
